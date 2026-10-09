@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+}
+
+.container{
+    display:flex;
+    height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:250px;
+    background:#0f172a;
+    color:white;
+    padding:20px;
+    overflow-y:auto;
+}
+
+.sidebar h2{
+    margin-bottom:30px;
+}
+
+.menu-item{
+    padding:12px;
+    margin:8px 0;
+    cursor:pointer;
+    border-radius:8px;
+    transition:0.3s;
+}
+
+.menu-item:hover{
+    background:#1e293b;
+}
+
+.submenu{
+    display:none;
+    margin-left:15px;
+}
+
+.submenu div{
+    padding:8px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.submenu div:hover{
+    color:#38bdf8;
+}
+
+/* CONTENT */
+
+.content{
+    flex:1;
+    padding:30px;
+    overflow:auto;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+/* FORM */
+
+input{
+    display:block;
+    width:320px;
+    padding:10px;
+    margin:10px 0;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+button{
+    padding:10px 20px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+/* LIST */
+
+ul{
+    list-style:none;
+    padding:0;
+}
+
+li{
+    background:white;
+    padding:15px;
+    margin:10px 0;
+    border-radius:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.result-card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.result-row{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px solid #eee;
+}
+
+.result-row:last-child{
+    border-bottom:none;
+}
+
+.empty{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    text-align:center;
+    color:gray;
+}
+
+canvas{
+    max-width:500px;
+    margin-top:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+
+    <div class="sidebar">
+
+        <h2>Admin Panel</h2>
+
+        <div class="menu-item"
+             onclick="showPage('dashboard')">
+            Dashboard
+        </div>
+
+        <div class="menu-item"
+             onclick="toggleMenu('eventsMenu')">
+            Manage Events
+        </div>
+
+        <div id="eventsMenu"
+             class="submenu">
+
+            <div onclick="showPage('addEventPage')">
+                Add Event
+            </div>
+
+            <div onclick="
+                showPage('endEventPage');
+                loadEvents();
+            ">
+                End Event
+            </div>
+
+            <div onclick="
+                showPage('eventHistoryPage');
+                loadEventHistory();
+            ">
+                Event History
+            </div>
+
+        </div>
+
+        <div class="menu-item"
+             onclick="toggleMenu('candidateMenu')">
+            Candidates
+        </div>
+
+        <div id="candidateMenu"
+             class="submenu">
+
+            <div onclick="
+                showPage('viewCandidatePage');
+                loadCandidates();
+            ">
+                View Candidates
+            </div>
+
+            <div onclick="showPage('addCandidatePage')">
+                Add Candidate
+            </div>
+
+            <div onclick="
+                showPage('removeCandidatePage');
+                loadCandidates();
+            ">
+                Remove Candidate
+            </div>
+
+        </div>
+
+        <div class="menu-item"
+             onclick="
+                showPage('resultsPage');
+                loadResults();
+             ">
+            Live Results
+        </div>
+
+        <div class="menu-item"
+             onclick="showPage('fraudPage')">
+            Fraud Logs
+        </div>
+
+        <div class="menu-item"
+             onclick="logout()">
+            Logout
+        </div>
+
+    </div>
+
+    <!-- CONTENT -->
+
+    <div class="content">
+
+        <!-- DASHBOARD -->
+
+        <div id="dashboard"
+             class="page active">
+
+            <h2>Dashboard</h2>
+
+            <h3>Current Ongoing Event Results</h3>
+
+            <div id="dashboardResults"></div>
+
+        </div>
+
+        <!-- ADD EVENT -->
+
+        <div id="addEventPage"
+             class="page">
+
+            <h2>Add Event</h2>
+
+            <input id="eventName"
+                   placeholder="Event Name">
+
+            <button onclick="addEvent()">
+                Add Event
+            </button>
+
+        </div>
+
+        <!-- END EVENT -->
+
+        <div id="endEventPage"
+             class="page">
+
+            <h2>End Event</h2>
+
+            <ul id="events"></ul>
+
+        </div>
+
+        <!-- EVENT HISTORY -->
+
+        <div id="eventHistoryPage"
+             class="page">
+
+            <h2>Event History</h2>
+
+            <ul id="eventHistoryList"></ul>
+
+        </div>
+
+        <!-- VIEW CANDIDATES -->
+
+        <div id="viewCandidatePage"
+             class="page">
+
+            <h2>View Candidates</h2>
+
+            <ul id="candidates"></ul>
+
+        </div>
+
+        <!-- ADD CANDIDATE -->
+
+        <div id="addCandidatePage"
+             class="page">
+
+            <h2>Add Candidate</h2>
+
+            <input id="eventId"
+                   placeholder="Event ID">
+
+            <input id="candidateName"
+                   placeholder="Candidate Name">
+
+            <input id="party"
+                   placeholder="Party">
+
+            <button onclick="addCandidate()">
+                Add Candidate
+            </button>
+
+        </div>
+
+        <!-- REMOVE CANDIDATE -->
+
+        <div id="removeCandidatePage"
+             class="page">
+
+            <h2>Remove Candidate</h2>
+
+            <ul id="removeCandidatesList"></ul>
+
+        </div>
+
+        <!-- RESULTS -->
+
+        <div id="resultsPage"
+             class="page">
+
+            <h2>Live Results</h2>
+
+            <div id="results"></div>
+
+            <canvas id="chart"></canvas>
+
+        </div>
+
+        <!-- FRAUD -->
+
+        <div id="fraudPage"
+             class="page">
+
+            <h2>Fraud Logs</h2>
+
+            <iframe src="/fraudLogs"
+                    width="100%"
+                    height="500"
+                    style="border:none;background:white;border-radius:10px;">
+            </iframe>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let chart;
+
+/* MENU */
+
+function toggleMenu(id){
+
+    let menu = document.getElementById(id);
+
+    menu.style.display =
+        menu.style.display === "block"
+        ? "none"
+        : "block";
+}
+
+function showPage(id){
+
+    document.querySelectorAll(".page")
+        .forEach(p=>p.classList.remove("active"));
+
+    document.getElementById(id)
+        .classList.add("active");
+}
+
+function logout(){
+    window.location.href="/logout";
+}
+
+/* EVENTS */
+
+async function addEvent(){
+
+    let event =
+        document.getElementById("eventName").value;
+
+    if(event === ""){
+        alert("Enter event name");
+        return;
+    }
+
+    await fetch("/addEvent",{
+        method:"POST",
+        body:`event=${encodeURIComponent(event)}`
+    });
+
+    alert("Event Added");
+
+    document.getElementById("eventName").value="";
+
+    loadEvents();
+    loadDashboardResults();
+}
+
+async function loadEvents(){
+
+    let res = await fetch("/listEvents");
+    let data = await res.json();
+
+    let list =
+        document.getElementById("events");
+
+    list.innerHTML = "";
+
+    let activeEvents =
+        data.filter(e=>e.status==="ACTIVE");
+
+    if(activeEvents.length===0){
+
+        list.innerHTML =
+            `<div class="empty">
+                No current event
+            </div>`;
+
+        return;
+    }
+
+    activeEvents.forEach(e=>{
+
+        list.innerHTML += `
+            <li>
+                <b>${e.name}</b><br><br>
+
+                Event ID: ${e.id}<br>
+                Status: ${e.status}<br><br>
+
+                <button onclick="endEvent('${e.id}')">
+                    End Event
+                </button>
+            </li>
+        `;
+    });
+}
+
+async function endEvent(id){
+
+    await fetch("/endEvent",{
+        method:"POST",
+        body:`id=${id}`
+    });
+
+    alert("Event Ended");
+
+    loadEvents();
+    loadDashboardResults();
+    loadResults();
+}
+
+/* CANDIDATES */
+
+async function addCandidate(){
+
+    let body =
+        `eventId=${document.getElementById("eventId").value}` +
+        `&name=${document.getElementById("candidateName").value}` +
+        `&party=${document.getElementById("party").value}`;
+
+    await fetch("/addCandidate",{
+        method:"POST",
+        body:body
+    });
+
+    alert("Candidate Added");
+
+    document.getElementById("eventId").value="";
+    document.getElementById("candidateName").value="";
+    document.getElementById("party").value="";
+
+    loadCandidates();
+}
+
+async function loadCandidates(){
+
+    let res =
+        await fetch("/listCandidates");
+
+    let data =
+        await res.json();
+
+    let list =
+        document.getElementById("candidates");
+
+    let removeList =
+        document.getElementById("removeCandidatesList");
+
+    list.innerHTML = "";
+    removeList.innerHTML = "";
+
+    if(data.length===0){
+
+        list.innerHTML =
+            `<div class="empty">
+                No candidates available
+            </div>`;
+
+        removeList.innerHTML =
+            `<div class="empty">
+                No candidates available
+            </div>`;
+
+        return;
+    }
+
+    data.forEach(c=>{
+
+        list.innerHTML += `
+            <li>
+                <b>${c.name}</b><br><br>
+                Event ID: ${c.eventId}<br>
+                Party: ${c.party}
+            </li>
+        `;
+
+        removeList.innerHTML += `
+            <li>
+                <b>${c.name}</b><br><br>
+
+                Event ID: ${c.eventId}<br>
+                Party: ${c.party}<br><br>
+
+                <button onclick="
+                    removeCandidate(
+                        '${c.eventId}',
+                        '${c.name}'
+                    )
+                ">
+                    Remove
+                </button>
+            </li>
+        `;
+    });
+}
+
+async function removeCandidate(eventId,name){
+
+    await fetch("/removeCandidate",{
+        method:"POST",
+        body:`eventId=${eventId}&name=${name}`
+    });
+
+    alert("Candidate Removed");
+
+    loadCandidates();
+}
+
+/* RESULTS */
+
+async function loadResults(){
+
+    let eventRes =
+        await fetch("/listEvents");
+
+    let candidateRes =
+        await fetch("/listCandidates");
+
+    let resultRes =
+        await fetch("/liveResults");
+
+    let events = await eventRes.json();
+    let candidates = await candidateRes.json();
+    let results = await resultRes.json();
+
+    let div =
+        document.getElementById("results");
+
+    div.innerHTML = "";
+
+    let activeEvents =
+        events.filter(e=>e.status==="ACTIVE");
+
+    if(activeEvents.length===0){
+
+        div.innerHTML =
+            `<div class="empty">
+                No current event
+            </div>`;
+
+        return;
+    }
+
+    activeEvents.forEach(event=>{
+
+        let card =
+            document.createElement("div");
+
+        card.className =
+            "result-card";
+
+        let html = `
+            <h3>${event.name}</h3>
+            <p><b>Event ID:</b> ${event.id}</p>
+            <hr>
+        `;
+
+        let eventCandidates =
+            candidates.filter(
+                c=>c.eventId===event.id
+            );
+
+        if(eventCandidates.length===0){
+
+            html += `
+                <p>No candidates available</p>
+            `;
+        }
+
+        eventCandidates.forEach(c=>{
+
+            let votes =
+                results[c.name] || 0;
+
+            html += `
+                <div class="result-row">
+                    <span>
+                        ${c.name}
+                        (${c.party})
+                    </span>
+
+                    <span>
+                        ${votes} Votes
+                    </span>
+                </div>
+            `;
+        });
+
+        card.innerHTML = html;
+
+        div.appendChild(card);
+    });
+
+    createChart(results);
+}
+
+function createChart(results){
+
+    let labels =
+        Object.keys(results);
+
+    let values =
+        Object.values(results);
+
+    let ctx =
+        document.getElementById("chart")
+        .getContext("2d");
+
+    if(chart){
+        chart.destroy();
+    }
+
+    chart = new Chart(ctx,{
+        type:"pie",
+        data:{
+            labels:labels,
+            datasets:[{
+                data:values
+            }]
+        }
+    });
+}
+
+/* DASHBOARD */
+
+async function loadDashboardResults(){
+
+    let eventRes =
+        await fetch("/listEvents");
+
+    let candidateRes =
+        await fetch("/listCandidates");
+
+    let resultRes =
+        await fetch("/liveResults");
+
+    let events = await eventRes.json();
+    let candidates = await candidateRes.json();
+    let results = await resultRes.json();
+
+    let div =
+        document.getElementById("dashboardResults");
+
+    div.innerHTML = "";
+
+    let activeEvents =
+        events.filter(e=>e.status==="ACTIVE");
+
+    if(activeEvents.length===0){
+
+        div.innerHTML =
+            `<div class="empty">
+                No current event
+            </div>`;
+
+        return;
+    }
+
+    activeEvents.forEach(event=>{
+
+        let card =
+            document.createElement("div");
+
+        card.className =
+            "result-card";
+
+        let html = `
+            <h3>${event.name}</h3>
+            <p><b>Event ID:</b> ${event.id}</p>
+        `;
+
+        let eventCandidates =
+            candidates.filter(
+                c=>c.eventId===event.id
+            );
+
+        if(eventCandidates.length===0){
+
+            html += `
+                <p>No candidates available</p>
+            `;
+        }
+
+        eventCandidates.forEach(c=>{
+
+            let votes =
+                results[c.name] || 0;
+
+            html += `
+                <div class="result-row">
+                    <span>${c.name}</span>
+                    <span>${votes} Votes</span>
+                </div>
+            `;
+        });
+
+        card.innerHTML = html;
+
+        div.appendChild(card);
+    });
+}
+
+/* EVENT HISTORY */
+
+async function loadEventHistory(){
+
+    let res =
+        await fetch("/eventHistory");
+
+    let data =
+        await res.json();
+
+    let list =
+        document.getElementById("eventHistoryList");
+
+    list.innerHTML = "";
+
+    if(data.length===0){
+
+        list.innerHTML =
+            `<div class="empty">
+                No ended events
+            </div>`;
+
+        return;
+    }
+
+    data.forEach(e=>{
+
+        list.innerHTML += `
+            <li>
+                <b>${e.name}</b><br><br>
+                Event ID: ${e.id}<br>
+                Status: ${e.status}
+            </li>
+        `;
+    });
+}
+
+/* INITIAL LOAD */
+
+loadEvents();
+loadCandidates();
+loadResults();
+loadDashboardResults();
+
+setInterval(()=>{
+    loadResults();
+    loadDashboardResults();
+},3000);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Forgot Password</title>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+}
+
+.container{
+    width:400px;
+    padding:35px;
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(15px);
+    border-radius:18px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.5);
+    color:white;
+    text-align:center;
+}
+
+h2{
+    margin-bottom:20px;
+}
+
+h3{
+    margin-top:20px;
+    margin-bottom:10px;
+    font-size:18px;
+}
+
+form{
+    display:flex;
+    flex-direction:column;
+}
+
+/* INPUTS */
+
+input[type="text"],
+input[type="password"],
+input[type="email"]{
+
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+
+    border:none;
+    outline:none;
+
+    border-radius:10px;
+
+    background:rgba(255,255,255,0.1);
+
+    color:white;
+    font-size:15px;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,0.6);
+}
+
+/* LABEL */
+
+label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    margin-top:5px;
+    margin-bottom:10px;
+
+    font-size:14px;
+    color:#e2e8f0;
+}
+
+label input[type="checkbox"]{
+    width:auto;
+    margin:0;
+}
+
+/* BUTTON */
+
+button{
+
+    width:100%;
+    padding:12px;
+
+    margin-top:10px;
+
+    border:none;
+    border-radius:10px;
+
+    background:linear-gradient(45deg,#6366f1,#8b5cf6);
+
+    color:white;
+    font-size:15px;
+    font-weight:600;
+
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.03);
+}
+
+/* LINKS */
+
+a{
+    display:block;
+    margin-top:15px;
+
+    color:#38bdf8;
+    text-decoration:none;
+    font-size:14px;
+}
+
+a:hover{
+    text-decoration:underline;
+}
+
+/* MESSAGE */
+
+#otpBox,
+#msg{
+    margin-top:10px;
+    font-size:14px;
+}
+
+.success{
+    color:#4ade80;
+}
+
+.error{
+    color:#ff6b6b;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Forgot Password</h2>
+
+<!-- OTP -->
+
+<h3>Get OTP</h3>
+
+<form id="otpForm">
+
+<input
+type="email"
+name="email"
+placeholder="Enter Email"
+required>
+
+<button type="submit">
+Send OTP
+</button>
+
+</form>
+
+<p id="otpBox"></p>
+
+<!-- RESET -->
+
+<h3>Reset Password</h3>
+
+<form id="resetForm">
+
+<input
+type="email"
+name="email"
+placeholder="Email"
+required>
+
+<input
+type="text"
+name="otp"
+placeholder="OTP"
+required>
+
+<input
+type="password"
+id="forgotPassword"
+name="newPassword"
+placeholder="New Password"
+required>
+
+<label>
+
+<input
+type="checkbox"
+onclick="toggleForgotPassword()">
+
+Show Password
+
+</label>
+
+<button type="submit">
+Reset Password
+</button>
+
+</form>
+
+<p id="msg"></p>
+
+<a href="login.html">
+Back to Login
+</a>
+
+</div>
+
+<script>
+
+/* SHOW PASSWORD */
+
+function toggleForgotPassword(){
+
+    let pwd =
+        document.getElementById("forgotPassword");
+
+    if(pwd.type === "password"){
+
+        pwd.type = "text";
+
+    }else{
+
+        pwd.type = "password";
+    }
+}
+
+/* SEND OTP */
+
+document.getElementById("otpForm").onsubmit =
+async e => {
+
+    e.preventDefault();
+
+    let res = await fetch("/sendOTP",{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+
+        body:new URLSearchParams(
+            new FormData(e.target)
+        )
+    });
+
+    let text =
+        await res.text();
+
+    document.getElementById("otpBox")
+        .innerHTML =
+        `<span class="success">${text}</span>`;
+};
+
+/* RESET PASSWORD */
+
+document.getElementById("resetForm").onsubmit =
+async e => {
+
+    e.preventDefault();
+
+    let res = await fetch("/resetPassword",{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+
+        body:new URLSearchParams(
+            new FormData(e.target)
+        )
+    });
+
+    let text =
+        await res.text();
+
+    if(text === "PASSWORD_RESET_SUCCESS"){
+
+        document.getElementById("msg")
+            .innerHTML =
+            `<span class="success">
+                Password Reset Successful
+            </span>`;
+
+    }else{
+
+        document.getElementById("msg")
+            .innerHTML =
+            `<span class="error">
+                ${text}
+            </span>`;
+    }
+};
+
+</script>
+
+</body>
+</html>

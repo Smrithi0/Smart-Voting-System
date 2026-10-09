@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>User Dashboard</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+}
+
+.container{
+    display:flex;
+    height:100vh;
+}
+
+.sidebar{
+    width:250px;
+    background:#0f172a;
+    color:white;
+    padding:20px;
+    overflow-y:auto;
+}
+
+.sidebar h2{
+    margin-bottom:30px;
+}
+
+.menu-item{
+    padding:12px;
+    margin:8px 0;
+    cursor:pointer;
+    border-radius:8px;
+    transition:0.3s;
+}
+
+.menu-item:hover{
+    background:#1e293b;
+}
+
+.submenu{
+    display:none;
+    margin-left:15px;
+}
+
+.submenu div{
+    padding:8px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.submenu div:hover{
+    color:#38bdf8;
+}
+
+.content{
+    flex:1;
+    padding:30px;
+    overflow:auto;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+input{
+    display:block;
+    margin:10px 0;
+    padding:10px;
+    width:320px;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+button{
+    padding:10px 20px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+ul{
+    list-style:none;
+    padding:0;
+}
+
+li{
+    background:white;
+    padding:15px;
+    margin:10px 0;
+    border-radius:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.empty{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    text-align:center;
+    color:gray;
+}
+
+.success{
+    color:green;
+}
+
+.error{
+    color:red;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h2>User Panel</h2>
+
+<div class="menu-item"
+     onclick="showPage('dashboard')">
+Dashboard
+</div>
+
+<div class="menu-item"
+     onclick="
+        showPage('eventsPage');
+        loadEvents();
+     ">
+Available Events
+</div>
+
+<div class="menu-item"
+     onclick="showPage('votePage')">
+Vote Now
+</div>
+
+<div class="menu-item"
+     onclick="
+        showPage('historyPage');
+        loadVotingHistory();
+     ">
+Voting History
+</div>
+
+<div class="menu-item"
+     onclick="toggleMenu('profileMenu')">
+Profile
+</div>
+
+<div id="profileMenu"
+     class="submenu">
+
+<div onclick="
+    showPage('showProfilePage');
+    loadProfile();
+">
+Show Profile
+</div>
+
+<div onclick="
+    showPage('editProfilePage');
+    loadProfile();
+">
+Edit Profile
+</div>
+
+<div onclick="
+    showPage('changePasswordPage');
+">
+Change Password
+</div>
+
+</div>
+
+<div class="menu-item"
+     onclick="logout()">
+Logout
+</div>
+
+</div>
+
+<div class="content">
+
+<!-- DASHBOARD -->
+
+<div id="dashboard"
+     class="page active">
+
+<h2>Dashboard</h2>
+
+<div class="card">
+
+<h3>Welcome to Smart Voting System</h3>
+
+<p>
+Vote securely and participate in ongoing events.
+</p>
+
+</div>
+
+<div id="dashboardEvents"></div>
+
+</div>
+
+<!-- EVENTS -->
+
+<div id="eventsPage"
+     class="page">
+
+<h2>Available Events</h2>
+
+<ul id="events"></ul>
+
+</div>
+
+<!-- VOTE -->
+
+<div id="votePage"
+     class="page">
+
+<h2>Vote Now</h2>
+
+<input id="email"
+       placeholder="Your Email">
+
+<input id="voteEvent"
+       placeholder="Event ID"
+       readonly>
+
+<h3>Available Candidates</h3>
+
+<ul id="candidateList"></ul>
+
+<input id="candidate"
+       placeholder="Selected Candidate"
+       readonly>
+
+<button type="button"
+        onclick="vote()">
+Submit Vote
+</button>
+
+<p id="msg"></p>
+
+</div>
+
+<!-- HISTORY -->
+
+<div id="historyPage"
+     class="page">
+
+<h2>Voting History</h2>
+
+<ul id="historyList"></ul>
+
+</div>
+
+<!-- SHOW PROFILE -->
+
+<div id="showProfilePage"
+     class="page">
+
+<h2>Show Profile</h2>
+
+<div class="card">
+
+<input type="text"
+       id="showName"
+       readonly>
+
+<input type="email"
+       id="showEmail"
+       readonly>
+
+<input type="text"
+       id="showPhone"
+       readonly>
+
+</div>
+
+</div>
+
+<!-- EDIT PROFILE -->
+
+<div id="editProfilePage"
+     class="page">
+
+<h2>Edit Profile</h2>
+
+<div class="card">
+
+<input type="text"
+       id="profileName"
+       placeholder="Full Name">
+
+<input type="email"
+       id="profileEmail"
+       readonly>
+
+<input type="text"
+       id="profilePhone"
+       placeholder="Phone Number">
+
+<button type="button"
+        onclick="saveProfile()">
+Save Details
+</button>
+
+<p id="profileMsg"></p>
+
+</div>
+
+</div>
+
+<!-- CHANGE PASSWORD -->
+
+<div id="changePasswordPage"
+     class="page">
+
+<h2>Change Password</h2>
+
+<div class="card">
+
+<input type="password"
+       id="oldPassword"
+       placeholder="Current Password">
+
+<input type="password"
+       id="newPassword"
+       placeholder="New Password">
+
+<input type="password"
+       id="confirmPassword"
+       placeholder="Confirm Password">
+
+<button type="button"
+        onclick="changePassword()">
+Change Password
+</button>
+
+<p id="passwordMsg"></p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function toggleMenu(id){
+
+    let menu = document.getElementById(id);
+
+    menu.style.display =
+        menu.style.display === "block"
+        ? "none"
+        : "block";
+}
+
+function showPage(id){
+
+    document.querySelectorAll(".page")
+        .forEach(page=>{
+            page.classList.remove("active");
+        });
+
+    document.getElementById(id)
+        .classList.add("active");
+}
+
+function logout(){
+
+    window.location.href="/logout";
+}
+
+/* DASHBOARD */
+
+async function loadDashboard(){
+
+    let res =
+        await fetch("/listEvents");
+
+    let data =
+        await res.json();
+
+    let div =
+        document.getElementById("dashboardEvents");
+
+    div.innerHTML = "";
+
+    if(data.length===0){
+
+        div.innerHTML =
+        `<div class="empty">
+            No current event
+        </div>`;
+
+        return;
+    }
+
+    data.forEach(e=>{
+
+        div.innerHTML += `
+        <li>
+            <b>${e.name}</b><br><br>
+            Event ID: ${e.id}<br>
+            Status: ${e.status}
+        </li>`;
+    });
+}
+
+/* EVENTS */
+
+async function loadEvents(){
+
+    let res =
+        await fetch("/listEvents");
+
+    let data =
+        await res.json();
+
+    let list =
+        document.getElementById("events");
+
+    list.innerHTML = "";
+
+    if(data.length===0){
+
+        list.innerHTML =
+        `<div class="empty">
+            No current event
+        </div>`;
+
+        return;
+    }
+
+    data.forEach(e=>{
+
+        list.innerHTML += `
+        <li>
+
+            <b>${e.name}</b><br><br>
+
+            Event ID: ${e.id}<br>
+            Status: ${e.status}<br><br>
+
+            <button type="button"
+                    onclick="selectEvent('${e.id}')">
+                Select Event
+            </button>
+
+        </li>`;
+    });
+}
+
+function selectEvent(eventId){
+
+    document.getElementById("voteEvent")
+        .value = eventId;
+
+    loadCandidates(eventId);
+
+    showPage("votePage");
+}
+
+/* CANDIDATES */
+
+async function loadCandidates(eventId){
+
+    let res =
+        await fetch("/listCandidates");
+
+    let data =
+        await res.json();
+
+    let list =
+        document.getElementById("candidateList");
+
+    list.innerHTML = "";
+
+    let candidates =
+        data.filter(c=>c.eventId===eventId);
+
+    if(candidates.length===0){
+
+        list.innerHTML =
+        `<div class="empty">
+            No candidates
+        </div>`;
+
+        return;
+    }
+
+    candidates.forEach(c=>{
+
+        list.innerHTML += `
+        <li>
+
+            <b>${c.name}</b><br><br>
+
+            Party: ${c.party}<br><br>
+
+            <button type="button"
+                    onclick="selectCandidate('${c.name}')">
+                Vote This Candidate
+            </button>
+
+        </li>`;
+    });
+}
+
+function selectCandidate(name){
+
+    document.getElementById("candidate")
+        .value = name;
+}
+
+/* VOTE */
+
+async function vote(){
+
+    let email =
+        document.getElementById("email").value;
+
+    let eventId =
+        document.getElementById("voteEvent").value;
+
+    let candidate =
+        document.getElementById("candidate").value;
+
+    let body =
+        `email=${encodeURIComponent(email)}`
+        + `&eventId=${encodeURIComponent(eventId)}`
+        + `&candidate=${encodeURIComponent(candidate)}`;
+
+    let res =
+        await fetch("/vote",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/x-www-form-urlencoded"
+            },
+
+            credentials:"include",
+
+            body:body
+        });
+
+    let text =
+        await res.text();
+
+    document.getElementById("msg")
+        .innerHTML = text;
+}
+
+/* HISTORY */
+
+async function loadVotingHistory(){
+
+    let res =
+        await fetch("/eventHistory");
+
+    let data =
+        await res.json();
+
+    let list =
+        document.getElementById("historyList");
+
+    list.innerHTML = "";
+
+    if(data.length===0){
+
+        list.innerHTML =
+        `<div class="empty">
+            No history
+        </div>`;
+
+        return;
+    }
+
+    data.forEach(v=>{
+
+        list.innerHTML += `
+        <li>
+
+            Event ID: ${v.id}<br><br>
+
+            Event Name: ${v.name}<br><br>
+
+            Status: ${v.status}
+
+        </li>`;
+    });
+}
+
+/* PROFILE */
+
+async function loadProfile(){
+
+    try{
+
+        let res =
+            await fetch("/userProfile",{
+                method:"GET",
+                credentials:"include"
+            });
+
+        let data =
+            await res.json();
+
+        document.getElementById("showName")
+            .value = data.name || "";
+
+        document.getElementById("showEmail")
+            .value = data.email || "";
+
+        document.getElementById("showPhone")
+            .value = data.phone || "";
+
+        document.getElementById("profileName")
+            .value = data.name || "";
+
+        document.getElementById("profileEmail")
+            .value = data.email || "";
+
+        document.getElementById("profilePhone")
+            .value = data.phone || "";
+
+    }catch(err){
+
+        console.log(err);
+    }
+}
+
+async function saveProfile(){
+
+    let body =
+        `name=${encodeURIComponent(document.getElementById("profileName").value)}`
+        + `&phone=${encodeURIComponent(document.getElementById("profilePhone").value)}`;
+
+    let res =
+        await fetch("/updateProfile",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/x-www-form-urlencoded"
+            },
+
+            credentials:"include",
+
+            body:body
+        });
+
+    let text =
+        await res.text();
+
+    document.getElementById("profileMsg")
+        .innerHTML = text;
+
+    loadProfile();
+}
+
+/* CHANGE PASSWORD */
+
+async function changePassword(){
+
+    let oldPass =
+        document.getElementById("oldPassword").value;
+
+    let newPass =
+        document.getElementById("newPassword").value;
+
+    let confirmPass =
+        document.getElementById("confirmPassword").value;
+
+    if(newPass !== confirmPass){
+
+        document.getElementById("passwordMsg")
+            .innerHTML =
+            `<span class="error">
+                Passwords do not match
+            </span>`;
+
+        return;
+    }
+
+    let body =
+        `oldPassword=${encodeURIComponent(oldPass)}`
+        + `&newPassword=${encodeURIComponent(newPass)}`;
+
+    let res =
+        await fetch("/changePassword",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/x-www-form-urlencoded"
+            },
+
+            credentials:"include",
+
+            body:body
+        });
+
+    let text =
+        await res.text();
+
+    document.getElementById("passwordMsg")
+        .innerHTML = text;
+}
+
+loadDashboard();
+loadProfile();
+
+</script>
+
+</body>
+</html>
