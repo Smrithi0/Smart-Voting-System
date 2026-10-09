@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+<h2>👨‍💼 Admin Dashboard</h2>
+
+<h3>Add Candidate</h3>
+
+<input id="name" placeholder="Candidate Name">
+<input id="party" placeholder="Party Name">
+
+<button onclick="addCandidate()">Add</button>
+
+<p id="msg"></p>
+
+<hr>
+
+<h3>📋 Candidates</h3>
+<ul id="list"></ul>
+
+<hr>
+
+<h3>📊 Live Results</h3>
+<div id="results"></div>
+
+<button onclick="loadResults()">Refresh Results</button>
+
+<a href="/index.html"><button>Logout</button></a>
+</div>
+
+<script>
+
+// LOAD CANDIDATES
+async function loadCandidates() {
+    let res = await fetch("/listCandidates");
+    let data = await res.json();
+
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(c => {
+        let li = document.createElement("li");
+        li.innerText = c.name + " (" + c.party + ")";
+        list.appendChild(li);
+    });
+}
+
+// ADD CANDIDATE
+async function addCandidate() {
+    let name = document.getElementById("name").value;
+    let party = document.getElementById("party").value;
+
+    let res = await fetch("/addCandidate", {
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded"},
+        body:`name=${name}&party=${party}`
+    });
+
+    let msg = await res.text();
+
+    if(msg === "EXISTS"){
+        document.getElementById("msg").innerText = "⚠ Candidate already exists";
+    } else {
+        document.getElementById("msg").innerText = "✅ Added";
+    }
+
+    loadCandidates();
+}
+
+// LIVE RESULTS
+async function loadResults() {
+    let res = await fetch("/liveResults");
+    let data = await res.json();
+
+    let div = document.getElementById("results");
+    div.innerHTML = "";
+
+    for (let key in data) {
+        let p = document.createElement("p");
+        p.innerText = key + " → " + data[key] + " votes";
+        div.appendChild(p);
+    }
+}
+
+// AUTO LOAD
+loadCandidates();
+loadResults();
+
+</script>
+
+</body>
+</html>
